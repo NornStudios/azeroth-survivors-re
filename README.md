@@ -83,6 +83,12 @@ scripts/web-build.sh       # → web/dist
 cargo run --release -p wenilla-host -- --www web/dist --data wow-data/Data
 ```
 
+The native desktop build needs none of the wasm toolchain — just the data and `$WOW_DATA`:
+
+```bash
+WOW_DATA=wow-data/Data cargo run --release -p warcraft-survivors
+```
+
 ## Controls
 
 See [CONTROLS.md](CONTROLS.md). The short version: **WASD** to move, **Space** to jump, **F**
