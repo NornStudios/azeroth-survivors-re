@@ -6,6 +6,7 @@
 |---|---|---|
 | Menu | Click a race, gender, class and zone | make your pick (**Randomize** rolls one) |
 | Menu | **Enter** (or **Enter World**) | start the run; the world travels to the zone picked |
+| Menu | **Esc** (or **Exit Game**) | leave the game |
 | Playing | **W / S / A / D** or **arrow keys** | move the hero (locked camera: the hero faces the cursor, backpedals and strafes) |
 | Playing | **Space** | jump |
 | Playing | **F** (from level 5) | your class's movement spell: Blink, Charge… aim at the cursor |
@@ -16,7 +17,7 @@
 | Playing | **Esc** | pause |
 | Playing | — | abilities cast themselves (no aim) |
 | Level up | **1 / 2 / 3** (or click a card) | pick an upgrade |
-| Paused | **Esc** | resume |
+| Paused | **Esc** | resume (**Quit game** leaves, **Abandon run** returns to the menu) |
 | Game over | **Enter** (or **Play again**) | back to the menu |
 | Any | minimap **+ / −** / minimize | minimap zoom / collapse |
 

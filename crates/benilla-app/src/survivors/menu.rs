@@ -45,6 +45,7 @@ pub(super) enum MenuAction {
     Map(usize),
     Randomize,
     Enter,
+    Quit,
 }
 
 /// On [`MenuRoot`] once the glue art is in and the screen is built.
@@ -203,6 +204,26 @@ pub(super) fn build_menu(
                 GlueBtnKind::Normal,
                 1.0,
             );
+            // `CharSelectBackButton`'s corner, BOTTOMLEFT (30,30): the pick screen is where a
+            // run begins and ends, so it is the one screen that has to let you leave.
+            c.spawn(Node {
+                position_type: PositionType::Absolute,
+                left: Val::Px(30.0),
+                ..default()
+            })
+            .with_children(|c| {
+                glue_button(
+                    c,
+                    &art,
+                    f,
+                    MenuAction::Quit,
+                    "Exit Game",
+                    200.0,
+                    60.0,
+                    GlueBtnKind::Normal,
+                    1.0,
+                );
+            });
         });
     });
 }
@@ -528,6 +549,7 @@ pub(super) fn menu_clicks(
     mut run: ResMut<Run>,
     mut rng: ResMut<Rng>,
     mut next: ResMut<NextState<Phase>>,
+    mut exit: MessageWriter<AppExit>,
 ) {
     if *phase.get() != Phase::Menu {
         return;
@@ -559,6 +581,9 @@ pub(super) fn menu_clicks(
             if start_run(&mut run, &mut selection) {
                 next.set(Phase::Playing);
             }
+        }
+        MenuAction::Quit => {
+            exit.write(AppExit::Success);
         }
         MenuAction::Randomize => {
             let picks: Vec<(usize, usize)> = all
@@ -645,7 +670,7 @@ pub(super) fn refresh_menu_ui(
             MenuAction::Sex(s) => cur.is_some_and(|c| c.1 == s),
             MenuAction::Class(i) => selection.class == Some(i),
             MenuAction::Map(i) => selection.map == i,
-            MenuAction::Randomize | MenuAction::Enter => false,
+            MenuAction::Randomize | MenuAction::Enter | MenuAction::Quit => false,
         };
         if let Some(mut lock) = lock {
             if lock.0 != selected {

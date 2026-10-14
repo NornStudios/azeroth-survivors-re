@@ -1058,11 +1058,16 @@ pub(super) fn keys(
     mut selection: ResMut<Selection>,
     mut run: ResMut<Run>,
     mut next: ResMut<NextState<Phase>>,
+    mut exit: MessageWriter<AppExit>,
 ) {
     match phase.get() {
         Phase::Menu => {
             if keys.just_pressed(KeyCode::Enter) && start_run(&mut run, &mut selection) {
                 next.set(Phase::Playing);
+            }
+            // Nothing is running yet, so Escape leaves the game rather than pausing it.
+            if keys.just_pressed(KeyCode::Escape) {
+                exit.write(AppExit::Success);
             }
         }
         Phase::Playing => {
