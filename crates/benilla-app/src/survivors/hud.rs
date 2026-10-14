@@ -13,7 +13,6 @@ use bevy::window::PrimaryWindow;
 
 use super::data::{self, AbilityDef, Effect, Kind, PassiveDef, Stat};
 use super::hero::{self, Hero};
-use super::minimap::{self, MiniMap};
 use super::{Owned, Phase, Rng, Run, Selection, Stats};
 
 const GOLD: Color = Color::srgb(1.0, 0.82, 0.0);
@@ -282,14 +281,11 @@ fn spell_name(spells: Option<&crate::ui_action::Spells>, spell: u32, fallback: &
 pub(super) fn setup_hud(
     mut commands: Commands,
     asset_server: Res<AssetServer>,
-    mut images: ResMut<Assets<Image>>,
     mut sweeps_init: ResMut<Assets<SweepUiMaterial>>,
 ) {
     let font = crate::char_select::wow_font(&asset_server);
-    let number_font: Handle<Font> = asset_server.load("mpq://Fonts/ARIALN.ttf");
     commands.insert_resource(HudFont(font.clone()));
     let f = &font;
-    let map = MiniMap::new(&mut images);
 
     // --- The in-run HUD. ---
     commands
@@ -306,93 +302,9 @@ pub(super) fn setup_hud(
             Visibility::Hidden,
         ))
         .with_children(|root| {
-            // `MainMenuExpBar`, 1024×13 at the bottom centre. The reference stacks it on the
-            // 40-unit action bar; with no action bar here it rests on the screen's edge.
-            root.spawn((
-                XpBar,
-                Interaction::default(),
-                Node {
-                    position_type: PositionType::Absolute,
-                    left: Val::Percent(50.0),
-                    bottom: Val::Px(0.0),
-                    margin: UiRect::left(Val::Px(-512.0)),
-                    width: Val::Px(1024.0),
-                    height: Val::Px(13.0),
-                    ..default()
-                },
-                BackgroundColor(Color::srgba(0.0, 0.0, 0.0, 0.5)),
-            ))
-            .with_children(|bar| {
-                bar.spawn((
-                    XpFill,
-                    Node {
-                        width: Val::Percent(0.0),
-                        height: Val::Percent(100.0),
-                        ..default()
-                    },
-                    ImageNode {
-                        color: Color::NONE,
-                        ..default()
-                    },
-                    UiArt::tinted(
-                        "Interface\\TargetingFrame\\UI-StatusBar",
-                        Color::srgb(0.58, 0.0, 0.55),
-                    ),
-                ));
-                // `MainMenuXPBarTexture0`..`3`: the segment rules, 256×10 on the bar's top.
-                for (i, top) in [0.792_968_75, 0.542_968_75, 0.292_968_75, 0.042_968_75]
-                    .into_iter()
-                    .enumerate()
-                {
-                    bar.spawn((
-                        Node {
-                            position_type: PositionType::Absolute,
-                            left: Val::Px(256.0 * i as f32),
-                            top: Val::Px(0.0),
-                            width: Val::Px(256.0),
-                            height: Val::Px(10.0),
-                            ..default()
-                        },
-                        ImageNode {
-                            color: Color::NONE,
-                            ..default()
-                        },
-                        UiArt::crop(
-                            "Interface\\MainMenuBar\\UI-MainMenuBar-Dwarf",
-                            [0.0, 1.0, top, top + 0.039_062_5],
-                        ),
-                    ));
-                }
-                // `MainMenuBarExpText`, `TextStatusBarText` centred one unit up, shown on hover.
-                bar.spawn(Node {
-                    position_type: PositionType::Absolute,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    top: Val::Px(-1.0),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                })
-                .with_children(|n| {
-                    n.spawn((
-                        XpText,
-                        Text::new(""),
-                        TextFont {
-                            font: number_font.clone(),
-                            font_size: 14.0,
-                            ..default()
-                        },
-                        TextColor(Color::WHITE),
-                        TextShadow {
-                            offset: Vec2::new(1.0, 1.0),
-                            color: Color::BLACK,
-                        },
-                        TextLayout::new(Justify::Center, LineBreak::NoWrap),
-                        Visibility::Hidden,
-                    ));
-                });
-            });
-            minimap::spawn_cluster(root, f, &map);
+            // No `MainMenuExpBar` and no `MinimapCluster` of our own any more: with the stock
+            // interface up, FrameXML draws both, in the same seats and off the same numbers, and
+            // two of each is what the player saw. What has no vanilla counterpart stays below.
             // The mobility button: a 36-unit action slot in `UI-Quickslot2`, its key over it.
             root.spawn((
                 MobilitySlot,
@@ -469,20 +381,18 @@ pub(super) fn setup_hud(
                 ..default()
             })
             .with_children(|row| {
+                // Clear of `PlayerFrame`, which sits in the top-left 232×100 of the reference's
+                // 768-unit screen. No ability row here any more: the stock action bar carries the
+                // run's abilities ([`super::actionbar`]). Passives have no vanilla counterpart,
+                // so they stay.
                 row.spawn(Node {
                     flex_direction: FlexDirection::Column,
                     row_gap: Val::Px(6.0),
                     width: Val::Px(300.0),
+                    margin: UiRect::top(Val::Px(100.0)),
                     ..default()
                 })
                 .with_children(|col| {
-                    col.spawn((
-                        AbilityRow,
-                        Node {
-                            column_gap: Val::Px(4.0),
-                            ..default()
-                        },
-                    ));
                     col.spawn((
                         PassiveRow,
                         Node {
@@ -509,7 +419,8 @@ pub(super) fn setup_hud(
                         line.spawn((KillText, text(f, "Kills 0", 14.0, Color::WHITE)));
                     });
                 });
-                // The minimap cluster's column.
+                // The column the minimap cluster used to balance; the stock
+                // `MinimapCluster` floats over it now, so this only keeps the clock centred.
                 row.spawn(Node {
                     width: Val::Px(300.0),
                     ..default()
@@ -604,7 +515,6 @@ pub(super) fn setup_hud(
                         });
                 });
         });
-    commands.insert_resource(map);
 
     // --- The run's pick screen; [`super::menu`] builds into it once the glue art is in. ---
     commands.spawn((

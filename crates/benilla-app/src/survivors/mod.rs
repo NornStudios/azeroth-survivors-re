@@ -5,6 +5,7 @@
 //! off ([`crate::run_mode::CaptureMode`]).
 
 mod abilities;
+mod actionbar;
 mod auto;
 mod cards;
 mod data;
@@ -13,7 +14,6 @@ mod grade;
 mod hero;
 mod hud;
 mod menu;
-mod minimap;
 mod mobility;
 mod units;
 
@@ -122,12 +122,18 @@ impl Plugin for SurvivorsPlugin {
                     hud::xp_hover,
                     hud::icon_tooltip,
                     hud::hero_plate,
-                    minimap::map_buttons,
-                    minimap::zone_text,
-                    minimap::compose,
                 )
                     .chain()
                     .after(hud::show_panels),
+            )
+            // On its own, not in the chain above: `UiFeed` already seats it against the script
+            // tick, and inheriting that chain's `after(show_panels)` closes a cycle through
+            // `UiInput`.
+            .add_systems(
+                Update,
+                actionbar::feed_action_bar
+                    .in_set(crate::ui_script::UiFeed)
+                    .run_if(crate::ui_script::ingame_ui_up),
             )
             .add_systems(OnEnter(Phase::Playing), unpause)
             .add_systems(OnEnter(Phase::LevelUp), (pause, hud::roll_offer))

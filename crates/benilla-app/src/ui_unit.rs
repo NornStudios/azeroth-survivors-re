@@ -1376,20 +1376,15 @@ fn feed_units(
     // The XP pair and `PLAYER_XP_UPDATE`, ahead of the `PLAYER_ENTERING_WORLD` fire so its
     // handlers read real values. The event fires on first sight too, at login and after a
     // `/reload`, where the reference's field watchers stay silent.
-    // No self descriptor is zero, not absent. A mode that builds the interface before its hero
-    // exists (survivors, whose pick screen is already in world) otherwise leaves
-    // `UnitXPMax("player")` nil, which is the number `ExhaustionTick_Update` compares against.
-    let (xp, next) = self_q.iter().next().map_or((0, 0), |(store, _)| {
-        (
-            store.0.player_xp().unwrap_or(0),
-            store.0.player_next_level_xp().unwrap_or(0),
-        )
-    });
-    if memo.last_xp != Some((xp, next)) {
-        gate.audit("feed_units", "the XP pair");
-        memo.last_xp = Some((xp, next));
-        script.set_player_xp(xp, next);
-        script.fire_event("PLAYER_XP_UPDATE", vec![]);
+    if let Some((store, _)) = self_q.iter().next() {
+        let xp = store.0.player_xp().unwrap_or(0);
+        let next = store.0.player_next_level_xp().unwrap_or(0);
+        if memo.last_xp != Some((xp, next)) {
+            gate.audit("feed_units", "the XP pair");
+            memo.last_xp = Some((xp, next));
+            script.set_player_xp(xp, next);
+            script.fire_event("PLAYER_XP_UPDATE", vec![]);
+        }
     }
 
     // The rest snapshot (rest-state byte, pool, `PLAYER_FLAGS`), ahead of the entering-world fire
@@ -1398,16 +1393,12 @@ fn feed_units(
     // `0x5eeaf2`), `PLAYTIME_CHANGED` on `0x3000` (`0x5eeb65`, fire `0x5eeb6f`).
     // `UPDATE_EXHAUSTION` is two other watchers, `0x5de4e0` on the byte and `0x5de4b0` on the pool;
     // here it also fires on first sight, where they stay silent on a create and on `/reload`.
-    // Zero for the same reason as the XP pair above: `GetXPExhaustion()` is the other half of
-    // what the rested tick reads.
-    let rest = self_q.iter().next().map_or((0, 0, 0), |(store, _)| {
-        (
+    if let Some((store, _)) = self_q.iter().next() {
+        let rest = (
             store.0.player_rest_state().unwrap_or(0),
             store.0.player_rest_state_experience().unwrap_or(0),
             store.0.player_flags(),
-        )
-    });
-    {
+        );
         if memo.last_rest != Some(rest) {
             gate.audit("feed_units", "the rest snapshot");
             let prev = memo.last_rest;

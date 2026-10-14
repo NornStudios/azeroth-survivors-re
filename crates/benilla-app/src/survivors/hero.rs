@@ -159,6 +159,12 @@ pub(super) fn feed_player_frame(
     /// `PLAYER_XP` and `PLAYER_NEXT_LEVEL_XP`: `UnitXP("player")` and `UnitXPMax("player")`.
     const FIELD_PLAYER_XP: u16 = 716;
     const FIELD_PLAYER_NEXT_LEVEL_XP: u16 = 717;
+    /// `PLAYER_BYTES_2`, whose high byte is the rest state: 1 rested, 2 normal. Every 1.12
+    /// character carries it, and `ExhaustionTick_Update` leans on that — byte 0 has no
+    /// `Exhaustion.dbc` row, so `GetRestState()` answers nils and the unguarded `>= 3` of
+    /// `MainMenuBar.lua:25` raises. A hero on a run is never rested, so 2 is the honest value.
+    const FIELD_PLAYER_BYTES_2: u16 = 194;
+    const REST_STATE_NORMAL: u32 = 2 << 24;
 
     let Ok((entity, guid, mut store)) = hero.single_mut() else {
         return;
@@ -182,6 +188,11 @@ pub(super) fn feed_player_frame(
             FIELD_PLAYER_NEXT_LEVEL_XP,
             data::xp_to_next(run.level).max(1.0) as u32,
             store.0.player_next_level_xp(),
+        ),
+        (
+            FIELD_PLAYER_BYTES_2,
+            REST_STATE_NORMAL,
+            store.0.player_bytes_2(),
         ),
     ];
     for (index, new, old) in writes {
