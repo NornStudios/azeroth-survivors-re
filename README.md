@@ -43,8 +43,9 @@ minutes. **No server, no login, no account** — fully offline and self-containe
   `Damage 20 » 26` or `Targets 2 » 3`.
 - **A class movement spell on F** from level 5, aimed at the cursor: Blink, Charge, Sprint, Dash,
   Fade, Ghost Wolf, Aspect of the Cheetah, Blessing of Freedom, Howl of Terror.
-- **A camera you can free:** locked top-down by default with the hero facing the cursor. **C**
-  unlocks it to swing and tilt, and the wheel zooms from over the shoulder out to 70 yards.
+- **The client's own camera:** third person over the hero's shoulder, where a mouse drag swings
+  and tilts it and the wheel zooms from the shoulder out to 70 yards. **C** locks it into a
+  top-down view instead, the hero facing the cursor.
 - A light sharpen-and-colour pass over the picture (**G** toggles it).
 
 ## Play it

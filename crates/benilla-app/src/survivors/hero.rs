@@ -1,4 +1,4 @@
-//! The hero: its body, WASD movement over the terrain, the top-down camera, and its health.
+//! The hero: its body, WASD movement over the terrain, the third-person camera, and its health.
 
 use benilla_world::view::WorldCamera;
 use benilla_world::world_point::WorldPoint;
@@ -36,6 +36,12 @@ const PITCH_MIN: f32 = 0.18;
 const PITCH_MAX: f32 = 1.45;
 /// The locked view's tilt.
 const FIXED_PITCH: f32 = 61.0 * std::f32::consts::PI / 180.0;
+/// Over the shoulder, as the client itself sits behind a character: low enough to see the
+/// horizon, high enough to read the ground the swarm is crossing.
+const ORBIT_PITCH: f32 = 25.0 * std::f32::consts::PI / 180.0;
+/// The third-person seat's distance, near vanilla's own camera limit (15 yd) with a little room
+/// to see a wave coming.
+const ORBIT_DIST: f32 = 18.0;
 /// Wheel zoom range, yards from the hero's shoulders.
 const ZOOM_MIN: f32 = 1.5;
 const ZOOM_MAX: f32 = 70.0;
@@ -43,10 +49,12 @@ const ZOOM_MAX: f32 = 70.0;
 /// Whether the camera is locked; `C` toggles it.
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub(super) enum CamMode {
-    /// Locked top-down (58°), laptop-friendly — the original feel.
-    #[default]
+    /// Locked top-down (61°), laptop-friendly: the hero faces the cursor and WASD is
+    /// world-relative, which is the survivors-genre feel.
     Fixed,
-    /// Unlocked: a mouse drag swings and tilts it around the hero.
+    /// Over the shoulder, as the client plays: WASD is camera-relative, the hero faces where he
+    /// runs, and a mouse drag swings the camera around him.
+    #[default]
     Orbit,
 }
 
@@ -64,11 +72,11 @@ pub(super) struct CamRig {
 impl Default for CamRig {
     fn default() -> Self {
         Self {
-            dist: 30.0,
+            dist: ORBIT_DIST,
             orbit: 0.6,
             yaw: 0.0,
-            pitch: FIXED_PITCH,
-            mode: CamMode::Fixed,
+            pitch: ORBIT_PITCH,
+            mode: CamMode::Orbit,
         }
     }
 }
@@ -328,11 +336,14 @@ pub(super) fn place_camera(
     hero: Query<&Transform, (With<Hero>, Without<WorldCamera>)>,
     mut cams: Query<&mut Transform, With<WorldCamera>>,
 ) {
-    // `C` unlocks the camera to swing and tilt; locking it again snaps back to the top-down view,
-    // so world-relative WASD lines up with the screen again.
+    // `C` locks the camera into the top-down view, where world-relative WASD lines up with the
+    // screen and the hero faces the cursor; `C` again returns to the third-person seat.
     if keys.just_pressed(KeyCode::KeyC) {
         rig.mode = match rig.mode {
-            CamMode::Fixed => CamMode::Orbit,
+            CamMode::Fixed => {
+                rig.pitch = ORBIT_PITCH;
+                CamMode::Orbit
+            }
             CamMode::Orbit => {
                 rig.yaw = 0.0;
                 rig.pitch = FIXED_PITCH;
