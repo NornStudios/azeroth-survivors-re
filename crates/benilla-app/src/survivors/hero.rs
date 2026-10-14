@@ -156,6 +156,10 @@ pub(super) fn feed_player_frame(
 ) {
     use benilla_protocol::messages::{ObjectFields, ObjectType};
 
+    /// `PLAYER_XP` and `PLAYER_NEXT_LEVEL_XP`: `UnitXP("player")` and `UnitXPMax("player")`.
+    const FIELD_PLAYER_XP: u16 = 716;
+    const FIELD_PLAYER_NEXT_LEVEL_XP: u16 = 717;
+
     let Ok((entity, guid, mut store)) = hero.single_mut() else {
         return;
     };
@@ -171,6 +175,14 @@ pub(super) fn feed_player_frame(
         (units::FIELD_HEALTH, hp, store.0.unit_health()),
         (units::FIELD_MAX_HEALTH, max, store.0.unit_max_health()),
         (units::FIELD_LEVEL, run.level, store.0.unit_level()),
+        // The player descriptor the XP bar reads. `ExhaustionTick_Update` compares these against
+        // the rested pool, so a nil pair is the Lua error the stock MainMenuBar throws.
+        (FIELD_PLAYER_XP, run.xp.max(0.0) as u32, store.0.player_xp()),
+        (
+            FIELD_PLAYER_NEXT_LEVEL_XP,
+            data::xp_to_next(run.level).max(1.0) as u32,
+            store.0.player_next_level_xp(),
+        ),
     ];
     for (index, new, old) in writes {
         if old == Some(new) {
