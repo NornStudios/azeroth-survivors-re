@@ -36,12 +36,13 @@ const PITCH_MIN: f32 = 0.18;
 const PITCH_MAX: f32 = 1.45;
 /// The locked view's tilt.
 const FIXED_PITCH: f32 = 61.0 * std::f32::consts::PI / 180.0;
-/// Over the shoulder, as the client itself sits behind a character: low enough to see the
-/// horizon, high enough to read the ground the swarm is crossing.
-const ORBIT_PITCH: f32 = 25.0 * std::f32::consts::PI / 180.0;
+/// Over the shoulder, as the client itself sits behind a character: measured off the game this
+/// is a build of, where the horizon sits about a third of the way down the screen and the hero
+/// a little below the middle.
+const ORBIT_PITCH: f32 = 18.0 * std::f32::consts::PI / 180.0;
 /// The third-person seat's distance, near vanilla's own camera limit (15 yd) with a little room
 /// to see a wave coming.
-const ORBIT_DIST: f32 = 18.0;
+const ORBIT_DIST: f32 = 16.0;
 /// Wheel zoom range, yards from the hero's shoulders.
 const ZOOM_MIN: f32 = 1.5;
 const ZOOM_MAX: f32 = 70.0;
