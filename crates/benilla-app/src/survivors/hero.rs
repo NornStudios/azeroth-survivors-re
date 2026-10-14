@@ -131,10 +131,61 @@ pub(super) fn spawn_hero(
         pos,
         0.0,
     );
-    commands
-        .entity(e)
-        .insert((Hero { vy: 0.0, air: 0.0 }, Marks::buffs()));
+    commands.entity(e).insert((
+        Hero { vy: 0.0, air: 0.0 },
+        Marks::buffs(),
+        // The interface's own feeds — the XP pair, the default language, every `"player"` read —
+        // query this marker, which only a login inserts. Without it the stock frames bind to
+        // nothing and `MainMenuBar.lua` compares a nil experience against a number.
+        crate::net::SelfPlayer,
+    ));
     e
+}
+
+/// Bind the client's own `"player"` to the run's hero and keep its numbers true.
+///
+/// Two gaps kept the stock unit frames empty. The interface resolves `"player"` through
+/// [`crate::net::SelfGuid`], which only a login sets and a server-less run never does; and the
+/// run's health and level live in [`Run`], not in the unit's fields, so even a bound frame would
+/// read the 100/100 at level 60 that [`units::spawn_unit`] seeds. Both are this system's job.
+pub(super) fn feed_player_frame(
+    run: Res<Run>,
+    mut self_guid: ResMut<crate::net::SelfGuid>,
+    mut hero: Query<(Entity, &Guid, &mut ObjectStore), With<Hero>>,
+    mut fields: MessageWriter<FieldChanged>,
+) {
+    use benilla_protocol::messages::{ObjectFields, ObjectType};
+
+    let Ok((entity, guid, mut store)) = hero.single_mut() else {
+        return;
+    };
+    if self_guid.0 != Some(guid.0) {
+        self_guid.0 = Some(guid.0);
+    }
+    let stats = run.stats();
+    let max = stats.max_hp.round().max(1.0) as u32;
+    let hp = run.hp.clamp(0.0, stats.max_hp).round() as u32;
+    // Each field carries its own last value, so a frame that changed nothing writes nothing and
+    // the interface is not woken for it.
+    let writes = [
+        (units::FIELD_HEALTH, hp, store.0.unit_health()),
+        (units::FIELD_MAX_HEALTH, max, store.0.unit_max_health()),
+        (units::FIELD_LEVEL, run.level, store.0.unit_level()),
+    ];
+    for (index, new, old) in writes {
+        if old == Some(new) {
+            continue;
+        }
+        store.0.merge(ObjectFields::from_pairs(&[(index, new)]));
+        fields.write(FieldChanged {
+            entity,
+            guid: guid.0,
+            kind: ObjectType::Unit,
+            index,
+            old: old.unwrap_or(0),
+            new,
+        });
+    }
 }
 
 /// Midday over the battleground, whatever the clock says.
