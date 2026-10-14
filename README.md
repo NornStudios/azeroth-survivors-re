@@ -68,6 +68,21 @@ make start     # → open http://127.0.0.1:8090/
 
 Run `make` (or `make help`) to list every target.
 
+### On Windows
+
+The three scripts are bash, so build from **Git Bash** — Git for Windows brings `bash`, `curl`
+and `unzip`, and `make` is optional there (the scripts run on their own, and
+[ezwinports' make](https://winget.run/pkg/ezwinports/make) is one `winget install
+ezwinports.make` away). Besides [rustup](https://rustup.rs/) you need the **MSVC C++ build
+tools**: the wasm host and the native build link with `link.exe`.
+
+```bash
+scripts/fetch-data.sh      # ~5.5 GB from archive.org into wow-data/Data
+scripts/web-setup.sh       # wasi-sdk + binaryen, the x86_64-windows releases
+scripts/web-build.sh       # → web/dist
+cargo run --release -p wenilla-host -- --www web/dist --data wow-data/Data
+```
+
 ## Controls
 
 See [CONTROLS.md](CONTROLS.md). The short version: **WASD** to move, **Space** to jump, **F**

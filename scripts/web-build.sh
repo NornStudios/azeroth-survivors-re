@@ -46,6 +46,9 @@ for m in web/boot-manifest.json web/world-manifest.json; do if [ -f "$m" ]; then
 # measured +6 % frame rate in-world (docs: wenilla perf notes, 2026-08-29). The feature flags
 # match what rustc emitted; without them wasm-opt refuses the module. Skipped when absent.
 WASM_OPT="${WASM_OPT:-$(pwd)/tools/binaryen/bin/wasm-opt}"
+# Windows (Git Bash): the binaryen release ships wasm-opt.exe, and `command -v` on an
+# extensionless path misses it.
+[ -x "${WASM_OPT}" ] || [ ! -x "${WASM_OPT}.exe" ] || WASM_OPT="${WASM_OPT}.exe"
 command -v "${WASM_OPT}" >/dev/null || WASM_OPT="$(command -v wasm-opt || true)"
 if [ -n "${WASM_OPT}" ] && [ "${WEB_DEBUG:-0}" != 1 ]; then
   "${WASM_OPT}" -O3 --enable-bulk-memory --enable-nontrapping-float-to-int --enable-sign-ext \
