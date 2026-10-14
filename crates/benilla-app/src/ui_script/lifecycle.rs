@@ -123,8 +123,12 @@ fn install_addon_asset_resolvers(world: &mut World, script: &mut UiScript) {
 /// Whether this run wants the player UI: always outside a capture, and in one only when opted in
 /// ([`crate::run_mode::capture_ui_opted_in`]), since capture baselines test the world render.
 fn ui_wanted(world: &World) -> bool {
+    // Survivors marks itself `CaptureMode` to keep the engine's player and camera systems off its
+    // own hero, not because it is a screenshot harness — and the game it is a build of plays on
+    // the client's own interface, so the mode wants FrameXML even under that flag.
     !world.contains_resource::<crate::run_mode::CaptureMode>()
         || crate::run_mode::capture_ui_opted_in()
+        || crate::survivors::active()
 }
 
 /// The world-entry UI load still owed: armed at `OnEnter(InWorld)`, run by
