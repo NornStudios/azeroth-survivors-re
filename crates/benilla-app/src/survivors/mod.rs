@@ -61,7 +61,6 @@ impl Plugin for SurvivorsPlugin {
                     mobility::cast_mobility,
                     hero::drive_hero,
                     hero::place_camera,
-                    hero::feed_player_frame,
                 )
                     .chain()
                     .in_set(WorldStage::Input),

@@ -11,9 +11,9 @@ use crate::combat_text::CombatTextSpawn;
 use crate::creature_anim::{CastEvent, CastEventKind, PlaySeq, SpellGoTargets, SwingMessage};
 use crate::net::{FieldChanged, Guid, NetEntity, ObjectStore};
 
-pub(super) const FIELD_HEALTH: u16 = 22;
-pub(super) const FIELD_MAX_HEALTH: u16 = 28;
-pub(super) const FIELD_LEVEL: u16 = 34;
+const FIELD_HEALTH: u16 = 22;
+const FIELD_MAX_HEALTH: u16 = 28;
+const FIELD_LEVEL: u16 = 34;
 const FIELD_FACTION: u16 = 35;
 const FIELD_BYTES_0: u16 = 36;
 const FIELD_VIRTUAL_ITEM_DISPLAY: u16 = 37;
